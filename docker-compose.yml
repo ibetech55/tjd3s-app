@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8090:80"
+    volumes:
+      - .:/var/www/html
+      - ./custom-php.ini:/usr/local/etc/php/conf.d/custom-php.ini
+    networks:
+      - app-network
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: tjd3s_database
+      MYSQL_USER: tjd3s
+      MYSQL_PASSWORD: admin
+    volumes:
+      - db_tjd3s:/var/lib/mysql
+    networks:
+      - app-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: admin
+    ports:
+      - "8092:80"
+    networks:
+      - app-network
+
+volumes:
+  db_tjd3s:
+
+networks:
+  app-network:
+    driver: bridge
