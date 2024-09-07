@@ -44,11 +44,12 @@ try {
                     foreach ($_FILES[$fileInputName]['name'] as $key => $name) {
                         if ($_FILES[$fileInputName]['error'][$key] == UPLOAD_ERR_OK) {
                             $fileTmpPath = $_FILES[$fileInputName]['tmp_name'][$key];
-                            $fileName = basename($name);
-                            $filePath = $uploadDir . $fileName;
+                            $fileExtension = pathinfo($name, PATHINFO_EXTENSION);
+                            $randomFileName = uniqid(rand(), true) . '.' . $fileExtension; // Generate a random filename
+                            $filePath = $uploadDir . $randomFileName;
 
                             if (!move_uploaded_file($fileTmpPath, $filePath)) {
-                                throw new Exception('Error moving file "' . htmlspecialchars($fileName) . '" to destination.');
+                                throw new Exception('Error moving file "' . htmlspecialchars($randomFileName) . '" to destination.');
                             }
                         } else {
                             throw new Exception('Error uploading file "' . htmlspecialchars($name) . '": ' . getUploadErrorMessage($_FILES[$fileInputName]['error'][$key]));
