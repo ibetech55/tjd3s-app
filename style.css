@@ -407,7 +407,9 @@ button {
     margin-bottom: 1rem;
 }
 
-
+.error-input {
+    border: 2px solid red;
+}
 
 @media (max-width: 992px) {
     .banner-section {

@@ -1,9 +1,11 @@
-const CACHE_NAME = 'my-site-cache-v1';
+const CACHE_NAME = 'tjd3s-cache';
 const urlsToCache = [
     './',
     './index.php',
     './style.css',
-    './map-script.js'
+    './main.js',
+    './map-script.js',
+    './manifest.json'
 ];
 
 self.addEventListener('install', event => {
