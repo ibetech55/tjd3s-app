@@ -10,9 +10,9 @@ window.addEventListener('load', function () {
 })
 window.addEventListener('load', function () {
     navigator.geolocation.getCurrentPosition(showPosition2, showError, {
-        enableHighAccuracy: true,    // Enable high accuracy for better results
-        timeout: 10000,              // Set timeout to 10 seconds
-        maximumAge: 60000            // Use cached position for 1 minute if available
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
     });
 
     function showPosition2(position) {
