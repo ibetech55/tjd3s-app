@@ -1,5 +1,4 @@
 <?php
-include "./php/GetUserName.php";
 include "./fetch-suggestions.php";
 ?>
 
@@ -49,7 +48,7 @@ include "./fetch-suggestions.php";
         </div>
         <div class="banner-text">
             <p>
-                <span><?php echo isset($_GET['nome_usuario_clean']) ? $_GET['nome_usuario_clean'] : ''; ?>,</span>
+                <span id="nome-usuario"></span>
                 boas-vindas ao registro de atividades do <span>Programa Nacional de Economia
                     Popular,
                     Solidária e Sustentável!</span>
@@ -128,7 +127,6 @@ include "./fetch-suggestions.php";
         <h2>TJD3S</h2>
         <div class="contact">
             <span>Contato: selecao0124@fundacentro.gov.br</span>
-            <span>[Link: Politica de Privacidade]</span>
         </div>
 
         <script src="./main.js">

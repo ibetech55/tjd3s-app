@@ -19,8 +19,6 @@ window.onload = function () {
 function showPosition(position) {
     var lat = position.coords.latitude;
     var lon = position.coords.longitude;
-    document.getElementById('latitude').value = lat;
-    document.getElementById('longitude').value = lon;
 
     // Center map on user's location
     map.setView([lat, lon], 13);
@@ -29,9 +27,6 @@ function showPosition(position) {
     L.marker([lat, lon]).addTo(map)
         .bindPopup("Você está aqui")
         .openPopup();
-
-    // Optionally, you can reverse geocode the location using Nominatim
-    reverseGeocode(lat, lon);
 }
 
 // Handle geolocation errors
@@ -50,21 +45,4 @@ function showError(error) {
             alert("An unknown error occurred.");
             break;
     }
-}
-
-// Reverse geocoding using Nominatim
-function reverseGeocode(lat, lon) {
-    var url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
-
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (data && data.display_name) {
-                console.log("Address: " + data.display_name);
-                // Optionally, update the popup with the reverse geocoded address
-                // L.marker([lat, lon]).addTo(map)
-                //     .bindPopup(data.display_name)
-                //     .openPopup();
-            }
-        });
 }

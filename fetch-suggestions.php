@@ -7,7 +7,7 @@ include "./php/database.php";
 $q = isset($_GET['q']) ? $_GET['q'] : '';
 
 if ($q) {
-    $stmt = $conn->prepare("SELECT DISTINCT nome_frase FROM frases WHERE LOWER(nome_frase) LIKE LOWER(?) AND id_tipo_elemento_sintatico = 14 LIMIT 10");
+    $stmt = $conn->prepare("SELECT DISTINCT nome_tipo_acao FROM tipos_acoes WHERE LOWER(nome_tipo_acao) LIKE LOWER(?) AND id_tipo_elemento_sintatico = 14 LIMIT 10");
     $param = "%" . $q . "%";
     $stmt->bind_param('s', $param);
 
@@ -16,7 +16,7 @@ if ($q) {
         $suggestions = [];
 
         while ($row = $result->fetch_assoc()) {
-            $suggestions[] = $row['nome_frase'];
+            $suggestions[] = $row['nome_tipo_acao'];
         }
 
         echo json_encode($suggestions);

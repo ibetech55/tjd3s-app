@@ -1,7 +1,8 @@
 version: '3.8'
 
 services:
-  web:
+  tjd3s-web-app:
+    container_name: tjd3s-web-app
     build: .
     ports:
       - "8090:80"
@@ -11,22 +12,24 @@ services:
     networks:
       - app-network
 
-  db:
+  papedins_db:
+    container_name: papedins_db
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: admin
-      MYSQL_DATABASE: tjd3s_database
-      MYSQL_USER: tjd3s
+      MYSQL_DATABASE: papedins_db
+      MYSQL_USER: admin
       MYSQL_PASSWORD: admin
     volumes:
-      - db_tjd3s:/var/lib/mysql
+      - papedins_db:/var/lib/mysql
     networks:
       - app-network
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
     environment:
-      PMA_HOST: db
+      PMA_HOST: papedins_db
       MYSQL_ROOT_PASSWORD: admin
     ports:
       - "8092:80"
@@ -34,7 +37,7 @@ services:
       - app-network
 
 volumes:
-  db_tjd3s:
+  papedins_db:
 
 networks:
   app-network:

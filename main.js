@@ -1,5 +1,31 @@
 let imagesArray = [];
 
+function getNomeUsusario(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param) ? urlParams.get(param).replaceAll('_', ' ') : null;
+}
+
+window.addEventListener('load', function () {
+    document.getElementById('nome-usuario').innerText = `${getNomeUsusario('nome_usuario')},`;
+})
+window.addEventListener('load', function () {
+    navigator.geolocation.getCurrentPosition(showPosition2, showError, {
+        enableHighAccuracy: true,    // Enable high accuracy for better results
+        timeout: 10000,              // Set timeout to 10 seconds
+        maximumAge: 60000            // Use cached position for 1 minute if available
+    });
+
+    function showPosition2(position) {
+        var lat = position.coords.latitude;
+        var lon = position.coords.longitude;
+        localStorage.setItem('latitude', lat);
+        localStorage.setItem('longitude', lon);
+    }
+
+    function showError(error) {
+        console.log('Error in geolocation');
+    }
+});
 if ('serviceWorker' in navigator) {
     const protocol = window.location.protocol; // e.g., 'https:'
     const host = window.location.host; // e.g., 'example.com'
@@ -15,8 +41,6 @@ if ('serviceWorker' in navigator) {
             console.log('Service Worker registration failed:', error);
         });
 }
-
-
 
 function isMobileDevice() {
     return /Mobi|Android/i.test(navigator.userAgent);
@@ -382,7 +406,12 @@ function fetchSuggestions() {
 
             getPhrasesFromDB(currentWord)
                 .then(data => {
-                    displaySuggestions(data);
+                    suggestions = []
+                    suggestions = data;
+
+                    if (suggestions.length) {
+                        displaySuggestions(data);
+                    }
                 })
                 .catch(error => console.error('Error retrieving suggestions from IndexedDB:', error));
         }
@@ -412,11 +441,11 @@ function displaySuggestions(suggestions) {
         container.appendChild(chip);
     });
 }
-
 function addChip(text) {
     const chipsContainer = document.getElementById('chips-container');
     const input = document.getElementById('tipo-atividade');
-    input.innerText = ""
+    input.innerText = text;
+    input.value = text;
     const chip = document.createElement('div');
     chip.className = 'chip';
     chip.innerHTML = `
@@ -490,6 +519,11 @@ document.getElementById('criar-evidencia-form').addEventListener('submit', funct
 
     const errorFields = []
 
+    if (!getNomeUsusario('nome_usuario')) {
+        alert('Erro ao enviar dados, tente novamente');
+        return;
+    }
+
     Object.keys(fields).map((key) => {
         const field = fields[key];
         if (!field.value.trim()) {
@@ -511,18 +545,19 @@ document.getElementById('criar-evidencia-form').addEventListener('submit', funct
         alert("Por favor, carregue ou tire uma foto")
         return;
     }
-
-
     formData.append('nome-atividade', nomeAtividade.value);
     formData.append('tipo-atividade', tipoAtividade.value);
     formData.append('data', data.value);
     formData.append('atividade-realizada', atividadeRealizada.value);
-    formData.append('latitude', document.getElementById('latitude').value);
-    formData.append('longitude', document.getElementById('longitude').value);
+    formData.append('data-acao', data.value.split('T')[0]);
+    formData.append('hora-acao', data.value.split('T')[1]);
+    formData.append('longitude', localStorage.getItem('longitude'));
+    formData.append('latitude', localStorage.getItem('latitude'));
+    formData.append('nome-usuario', getNomeUsusario('nome_usuario'));
+
     if (imagesArray.length > 0) {
         formData.append('files[]', imagesArray[0]);
     }
-
 
     if (navigator.onLine) {
         fetch('/php/CriarEvidencia.php', {

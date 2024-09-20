@@ -1,9 +1,9 @@
 <?php
 
-$servername = "db";
-$username = "tjd3s";
+$servername = "papedins_db";
+$username = "admin";
 $password = "admin";
-$dbname = "tjd3s_database";
+$dbname = "papedins_db";
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);

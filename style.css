@@ -481,8 +481,15 @@ button {
         width: 600px;
     }
 
+    .banner-section .banner-text {
+        text-align: center;
+    }
+
+
+
+    .banner-section .banner-text p,
     .banner-section .banner-text p span {
-        font-size: 16px;
+        font-size: 22px;
         line-height: 1.8;
     }
 
