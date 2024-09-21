@@ -1,8 +1,9 @@
 let imagesArray = [];
+let suggestionSelected = "";
 
 function getNomeUsusario(param) {
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param) ? urlParams.get(param).replaceAll('_', ' ') : null;
+    return urlParams.get(param) ? urlParams.get(param).replaceAll('_', ' ') : "";
 }
 
 window.addEventListener('load', function () {
@@ -27,8 +28,8 @@ window.addEventListener('load', function () {
     }
 });
 if ('serviceWorker' in navigator) {
-    const protocol = window.location.protocol; // e.g., 'https:'
-    const host = window.location.host; // e.g., 'example.com'
+    const protocol = window.location.protocol;
+    const host = window.location.host;
     const swUrl = `${protocol}//${host}/sw.js`;
 
     navigator.serviceWorker.register(swUrl, {
@@ -251,12 +252,12 @@ function storeDataOffline(data) {
 
         const request = objectStore.getAll();
         request.onsuccess = () => {
-            const existingData = request.result;
-            if (existingData.length > 0) {
-                existingData.forEach(item => {
-                    objectStore.delete(item.id);
-                });
-            }
+            // const existingData = request.result;
+            // if (existingData.length > 0) {
+            //     existingData.forEach(item => {
+            //         objectStore.delete(item.id);
+            //     });
+            // }
 
             const dataToStore = {
                 ...data,
@@ -286,7 +287,7 @@ function storeDataOffline(data) {
 }
 
 function syncDataWithServer() {
-    console.log('Back online! Syncing data with server in 30 seconds...');
+    console.log('Back online! Syncing data with server in 10 seconds...');
 
     setTimeout(() => {
         openDatabase('OfflineDataDB', 1, upgradeOfflineDataDB).then(db => {
@@ -295,40 +296,42 @@ function syncDataWithServer() {
             const request = objectStore.getAll();
 
             request.onsuccess = (event) => {
+                const offlineDataArray = event.target.result;
 
-                if (event.target.result.length === 0) {
+                if (offlineDataArray.length === 0) {
                     console.log('No offline data to sync');
                     return;
                 }
-                const offlineData = event.target.result[0];
 
-                const formData = new FormData();
-                for (const key in offlineData) {
-                    if (key === 'files') {
-                        for (const file of offlineData.files) {
-                            formData.append('files[]', file);
+                offlineDataArray.forEach(offlineData => {
+                    const formData = new FormData();
+
+                    for (const key in offlineData) {
+                        if (key === 'files') {
+                            for (const file of offlineData.files) {
+                                formData.append('files[]', file);
+                            }
+                        } else {
+                            formData.append(key, offlineData[key]);
                         }
-                    } else {
-                        formData.append(key, offlineData[key]);
                     }
-                }
 
-                fetch('./php/CriarEvidencia.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok: ' + response.statusText);
-                        }
-                        alert('Dados enviados com sucesso!');
-                        return response.json();
+                    fetch('./php/CriarEvidencia.php', {
+                        method: 'POST',
+                        body: formData
                     })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
-
-
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok: ' + response.statusText);
+                            }
+                            console.log('Data synced successfully');
+                            clearOfflineData(db, offlineData.id);
+                            return response.json();
+                        })
+                        .catch(error => {
+                            console.error('Error syncing data:', error);
+                        });
+                });
             };
 
             request.onerror = () => {
@@ -337,6 +340,24 @@ function syncDataWithServer() {
         });
     }, 10000);
 }
+
+function clearOfflineData(db, id) {
+    const transaction = db.transaction(['offlineData'], 'readwrite');
+    const objectStore = transaction.objectStore('offlineData');
+    const clearRequest = objectStore.clear(); // Clears all data in the store
+
+    clearRequest.onsuccess = () => {
+        alert('All offline data cleared after sync')
+
+        console.log('All offline data cleared after sync');
+    };
+
+    clearRequest.onerror = () => {
+        alert('Error clearing all offline data')
+        console.error('Error clearing all offline data');
+    };
+}
+
 
 function removeSyncedDataFromDB(id) {
     openDatabase('OfflineDataDB', 1, upgradeOfflineDataDB).then(db => {
@@ -442,6 +463,7 @@ function displaySuggestions(suggestions) {
     });
 }
 function addChip(text) {
+    suggestionSelected = text;
     const chipsContainer = document.getElementById('chips-container');
     const input = document.getElementById('tipo-atividade');
     input.innerText = text;
@@ -519,7 +541,7 @@ document.getElementById('criar-evidencia-form').addEventListener('submit', funct
 
     const errorFields = []
 
-    if (!getNomeUsusario('nome_usuario')) {
+    if (!getNomeUsusario('nome_usuario') || !localStorage.getItem('longitude') || !localStorage.getItem('longitude')) {
         alert('Erro ao enviar dados, tente novamente');
         return;
     }
@@ -533,6 +555,22 @@ document.getElementById('criar-evidencia-form').addEventListener('submit', funct
             field.classList.remove('error-input')
         }
     })
+
+    if (errorFields.length > 0) {
+        const focusField = errorFields[0];
+        focusField.focus();
+        alert("Por favor, preencha todos os campos")
+        return;
+    }
+
+    if (suggestionSelected === "") {
+        alert("Por favor, escolha uma das opçoẽs do Frase que melhor descreve esse ação.");
+        document.getElementById('tipo-atividade').classList.add('error-input')
+        return;
+    } else {
+        document.getElementById('tipo-atividade').classList.remove('error-input')
+    }
+
 
     if (errorFields.length > 0) {
         const focusField = errorFields[0];

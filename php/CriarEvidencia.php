@@ -4,17 +4,14 @@ header('Content-Type: application/json; charset=utf-8');
 
 include "database.php";
 
-// Initialize response array
 $response = ['success' => false, 'message' => ''];
 function log_request_data()
 {
-    // Extract POST data and FILES data
     $logData = [
         'POST' => $_POST,
         'FILES' => $_FILES
     ];
 
-    // Convert the log data to JSON
     $logDataJson = json_encode($logData, JSON_PRETTY_PRINT);
     error_log($logDataJson);
 }
@@ -29,51 +26,38 @@ try {
 
     $url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=$lat&lon=$lon";
 
-    // Initialize a cURL session
     $ch = curl_init();
 
-    // Set the URL
     curl_setopt($ch, CURLOPT_URL, $url);
 
-    // Set the User-Agent header
     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-        'User-Agent: MyCustomUserAgent/1.0',  // Custom User-Agent
-        'Accept-Language: pt'  // Specify preferred language (optional)
+        'User-Agent: MyCustomUserAgent/1.0',
+        'Accept-Language: pt'
     ));
 
-    // Return the transfer as a string of the return value
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-    // Follow redirects, in case the API redirects the request
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
-    // Set a timeout for the request (optional)
     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 
-    // Execute the request
     $response = curl_exec($ch);
 
-    // Check for cURL errors
     if (curl_errno($ch)) {
         $error_msg = curl_error($ch);
         error_log("cURL Error: " . $error_msg);
         die('Error occurred: ' . $error_msg);
     }
 
-    // Check the HTTP status code
     $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     if ($http_status !== 200) {
         error_log("HTTP Error: " . $http_status);
         die('Error occurred: HTTP Status ' . $http_status);
     }
 
-    // Close the cURL session
     curl_close($ch);
 
-    // Decode the JSON response
     $mapData = json_decode($response, true);
-
-    // Get POST data
     $nome_usuario = $_POST['nome-usuario'];
     $nomeAtividadeEvento = $_POST['nome-atividade'];
     $nomeTipoAcao = $_POST['tipo-atividade'];
@@ -159,9 +143,8 @@ try {
         }
     } else {
         $error_message = 'Query failed: ' . $stmt->error;
-        error_log($error_message); // Logs the error to the terminal or error log
-        echo json_encode(['error' => $error_message]); // Sends the error as JSON response
-
+        error_log($error_message);
+        echo json_encode(['error' => $error_message]);
     }
 
     $stmt = $conn->prepare("SELECT * FROM cidades WHERE id_estado =  ? AND nome_cidade = ?");
@@ -175,7 +158,6 @@ try {
     if ($stmt->execute()) {
         $result = $stmt->get_result();
 
-        // Fetch all results
         $data = $result->fetch_all(MYSQLI_ASSOC);
         if (!empty($data)) {
             $id_cidade = $data[0]['id_chave_cidade'];
@@ -227,7 +209,6 @@ try {
         error_log('Query failed: ' . $e->getMessage());
     }
 
-    // Handle file uploads
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $uploadDir = '/var/www/html/uploads/';
 
@@ -290,7 +271,6 @@ try {
     if ($stmt->execute()) {
         $result = $stmt->get_result();
 
-        // Fetch all results
         $data = $result->fetch_all(MYSQLI_ASSOC);
 
         if (!empty($data)) {
@@ -358,7 +338,6 @@ try {
 
     echo json_encode($response);
 } catch (Exception $e) {
-    // Set error response
     $response['message'] = $e->getMessage();
 }
 
