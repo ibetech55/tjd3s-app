@@ -7,7 +7,14 @@ function getNomeUsusario(param) {
 }
 
 window.addEventListener('load', function () {
-    document.getElementById('nome-usuario').innerText = `${getNomeUsusario('nome_usuario')},`;
+    let nomeUsuario = "";
+    if (!localStorage.getItem('nome_usuario')) {
+        nomeUsuario = getNomeUsusario('nome_usuario');
+    } else {
+        nomeUsuario = localStorage.getItem('nome_usuario');
+    }
+    document.getElementById('nome-usuario').innerText = `${nomeUsuario},`;
+    localStorage.setItem('nome_usuario', nomeUsuario);
 })
 window.addEventListener('load', function () {
     navigator.geolocation.getCurrentPosition(showPosition2, showError, {
@@ -252,13 +259,6 @@ function storeDataOffline(data) {
 
         const request = objectStore.getAll();
         request.onsuccess = () => {
-            // const existingData = request.result;
-            // if (existingData.length > 0) {
-            //     existingData.forEach(item => {
-            //         objectStore.delete(item.id);
-            //     });
-            // }
-
             const dataToStore = {
                 ...data,
             };
@@ -270,6 +270,7 @@ function storeDataOffline(data) {
                 document.getElementById('criar-evidencia-form').reset();
                 document.getElementById('imagePreviews').innerHTML = '';
                 document.getElementById("remove-chip").click();
+                suggestionSelected = "";
                 imagePreviews = [];
                 alert('Dados salvos. Serão enviados quando houver conexão.');
             };
@@ -294,6 +295,7 @@ function syncDataWithServer() {
             const transaction = db.transaction(['offlineData'], 'readonly');
             const objectStore = transaction.objectStore('offlineData');
             const request = objectStore.getAll();
+            const fetchStatusArr = []
 
             request.onsuccess = (event) => {
                 const offlineDataArray = event.target.result;
@@ -324,16 +326,22 @@ function syncDataWithServer() {
                             if (!response.ok) {
                                 throw new Error('Network response was not ok: ' + response.statusText);
                             }
-                            console.log('Data synced successfully');
+                            fetchStatusArr.push(true)
                             clearOfflineData(db, offlineData.id);
                             return response.json();
                         })
                         .catch(error => {
+                            fetchStatusArr.push(false)
                             console.error('Error syncing data:', error);
                         });
                 });
             };
 
+            if (!fetchStatusArr.includes(false)) {
+                alert('Dados enviados com sucesso!')
+            } else {
+
+            }
             request.onerror = () => {
                 console.error('Error fetching data from IndexedDB');
             };
@@ -341,20 +349,18 @@ function syncDataWithServer() {
     }, 10000);
 }
 
+
 function clearOfflineData(db, id) {
     const transaction = db.transaction(['offlineData'], 'readwrite');
     const objectStore = transaction.objectStore('offlineData');
-    const clearRequest = objectStore.clear(); // Clears all data in the store
+    const deleteRequest = objectStore.delete(id);
 
-    clearRequest.onsuccess = () => {
-        alert('All offline data cleared after sync')
-
-        console.log('All offline data cleared after sync');
+    deleteRequest.onsuccess = () => {
+        console.log(`Offline data with id ${id} cleared after sync`);
     };
 
-    clearRequest.onerror = () => {
-        alert('Error clearing all offline data')
-        console.error('Error clearing all offline data');
+    deleteRequest.onerror = () => {
+        console.error(`Error clearing offline data with id ${id}`);
     };
 }
 
@@ -541,8 +547,13 @@ document.getElementById('criar-evidencia-form').addEventListener('submit', funct
 
     const errorFields = []
 
-    if (!getNomeUsusario('nome_usuario') || !localStorage.getItem('longitude') || !localStorage.getItem('longitude')) {
-        alert('Erro ao enviar dados, tente novamente');
+    if (!localStorage.getItem('longitude') || !localStorage.getItem('longitude')) {
+        alert('Erro ao enviar dados, não consegue encontrar sua localização');
+        return;
+    }
+
+    if (!localStorage.getItem('nome_usuario')) {
+        alert('Erro ao enviar dados, precisa ter uma usuario vinculado com esta pesquisa');
         return;
     }
 
@@ -591,7 +602,7 @@ document.getElementById('criar-evidencia-form').addEventListener('submit', funct
     formData.append('hora-acao', data.value.split('T')[1]);
     formData.append('longitude', localStorage.getItem('longitude'));
     formData.append('latitude', localStorage.getItem('latitude'));
-    formData.append('nome-usuario', getNomeUsusario('nome_usuario'));
+    formData.append('nome-usuario', localStorage.getItem('nome_usuario'));
 
     if (imagesArray.length > 0) {
         formData.append('files[]', imagesArray[0]);
@@ -604,6 +615,7 @@ document.getElementById('criar-evidencia-form').addEventListener('submit', funct
         })
             .then(() => {
                 formElement.reset();
+                suggestionSelected = "";
                 document.getElementById('imagePreviews').innerHTML = '';
                 document.getElementById("remove-chip").click();
                 alert('Dados enviados com sucesso!');
@@ -626,11 +638,3 @@ window.addEventListener('online', () => {
 window.addEventListener('offline', () => {
     console.log('You are now offline. Your data will be saved locally.');
 });
-
-
-
-// if ('serviceWorker' in navigator && 'SyncManager' in window) {
-//     navigator.serviceWorker.ready.then(registration => {
-//         registration.sync.register('sync-data');
-//     });
-// }

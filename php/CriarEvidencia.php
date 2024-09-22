@@ -307,8 +307,6 @@ try {
         $data = $result->fetch_all(MYSQLI_ASSOC);
 
         if (!empty($data)) {
-            error_log(json_encode($data, JSON_PRETTY_PRINT));
-
             $id_tipo_acao = $data[0]['id_chave_tipo_acao'];
         }
     } else {
