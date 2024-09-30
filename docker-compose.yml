@@ -3,6 +3,11 @@ version: '3.8'
 services:
   tjd3s-web-app:
     container_name: tjd3s-web-app
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50"
+        max-file: "3"     # Keep the last 3 log files
     build: .
     ports:
       - "8090:80"

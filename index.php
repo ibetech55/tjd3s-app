@@ -21,6 +21,7 @@ include "./fetch-suggestions.php";
 </head>
 
 <body>
+    <div id="loading"></div>
     <div id="notificationBox" class="notification-box">
         <span class="close" onclick="hideNotification()">&times;</span>
         <p>Deseja abrir a pasta de imagens ou usar a câmera?</p>

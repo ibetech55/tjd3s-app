@@ -1,6 +1,15 @@
 let imagesArray = [];
 let suggestionSelected = "";
 
+function showLoading() {
+    document.getElementById("loading").style.display = "block";
+
+}
+
+function hideLoading() {
+    document.getElementById("loading").style.display = "none";
+}
+
 function getNomeUsusario(param) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(param) ? urlParams.get(param).replaceAll('_', ' ') : "";
@@ -289,7 +298,7 @@ function storeDataOffline(data) {
 
 function syncDataWithServer() {
     console.log('Back online! Syncing data with server in 10 seconds...');
-
+    showLoading();
     setTimeout(() => {
         openDatabase('OfflineDataDB', 1, upgradeOfflineDataDB).then(db => {
             const transaction = db.transaction(['offlineData'], 'readonly');
@@ -302,6 +311,7 @@ function syncDataWithServer() {
 
                 if (offlineDataArray.length === 0) {
                     console.log('No offline data to sync');
+                    hideLoading();
                     return;
                 }
 
@@ -324,24 +334,29 @@ function syncDataWithServer() {
                     })
                         .then(response => {
                             if (!response.ok) {
+                                hideLoading();
                                 throw new Error('Network response was not ok: ' + response.statusText);
                             }
                             fetchStatusArr.push(true)
                             clearOfflineData(db, offlineData.id);
+                            hideLoading();
                             return response.json();
                         })
                         .catch(error => {
                             fetchStatusArr.push(false)
+                            hideLoading();
                             console.error('Error syncing data:', error);
                         });
                 });
             };
 
             if (!fetchStatusArr.includes(false)) {
+                hideLoading();
                 alert('Dados enviados com sucesso!')
             } else {
-
+                alert('Erro tente novamente!')
             }
+
             request.onerror = () => {
                 console.error('Error fetching data from IndexedDB');
             };
@@ -529,7 +544,7 @@ document.getElementById('fileInput').addEventListener('change', function (event)
 });
 document.getElementById('criar-evidencia-form').addEventListener('submit', function (event) {
     event.preventDefault();
-
+    showLoading();
     const formElement = document.getElementById('criar-evidencia-form');
     const formData = new FormData();
 
@@ -549,11 +564,13 @@ document.getElementById('criar-evidencia-form').addEventListener('submit', funct
 
     if (!localStorage.getItem('longitude') || !localStorage.getItem('longitude')) {
         alert('Erro ao enviar dados, não consegue encontrar sua localização');
+        hideLoading();
         return;
     }
 
     if (!localStorage.getItem('nome_usuario')) {
         alert('Erro ao enviar dados, precisa ter uma usuario vinculado com esta pesquisa');
+        hideLoading();
         return;
     }
 
@@ -570,13 +587,15 @@ document.getElementById('criar-evidencia-form').addEventListener('submit', funct
     if (errorFields.length > 0) {
         const focusField = errorFields[0];
         focusField.focus();
-        alert("Por favor, preencha todos os campos")
+        alert("Por favor, preencha todos os campos");
+        hideLoading();
         return;
     }
 
     if (suggestionSelected === "") {
         alert("Por favor, escolha uma das opçoẽs do Frase que melhor descreve esse ação.");
         document.getElementById('tipo-atividade').classList.add('error-input')
+        hideLoading();
         return;
     } else {
         document.getElementById('tipo-atividade').classList.remove('error-input')
@@ -586,12 +605,14 @@ document.getElementById('criar-evidencia-form').addEventListener('submit', funct
     if (errorFields.length > 0) {
         const focusField = errorFields[0];
         focusField.focus();
-        alert("Por favor, preencha todos os campos")
+        alert("Por favor, preencha todos os campos");
+        hideLoading();
         return;
     }
 
     if (imagesArray.length === 0) {
         alert("Por favor, carregue ou tire uma foto")
+        hideLoading();
         return;
     }
     formData.append('nome-atividade', nomeAtividade.value);
@@ -618,11 +639,14 @@ document.getElementById('criar-evidencia-form').addEventListener('submit', funct
                 suggestionSelected = "";
                 document.getElementById('imagePreviews').innerHTML = '';
                 document.getElementById("remove-chip").click();
+                loading.style.display = "none"
                 alert('Dados enviados com sucesso!');
+                hideLoading();
             })
             .catch(error => {
                 console.error('Error submitting data:', error);
                 alert('Erro ao enviar dados, tente novamente');
+                hideLoading();
             });
     } else {
         const plainData = Object.fromEntries(formData.entries());
