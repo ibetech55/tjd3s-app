@@ -14,6 +14,7 @@ services:
     volumes:
       - .:/var/www/html
       - ./custom-php.ini:/usr/local/etc/php/conf.d/custom-php.ini
+      - "C:/imagem:/imagem"  # Mount the entire C:/imagem folder into the container
     networks:
       - app-network
 

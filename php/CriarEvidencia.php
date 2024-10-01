@@ -17,7 +17,7 @@ function log_request_data()
     error_log($logDataJson);
 }
 
-// log_request_data();
+log_request_data();
 
 
 
@@ -212,14 +212,9 @@ try {
     }
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $uploadDir = '/var/www/html/uploads/';
-
-        // Create the upload directory if it doesn't exist
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
 
 
+        error_log("here");
         try {
             // Check if the uploads directory exists
             function handleFileUploads($fileInputName)
@@ -229,80 +224,76 @@ try {
                 global $caminho_arquivo_anonimizado;
                 global $caminho_arquivo_original;
                 global $nome_arquivo;
+                $lockFile = "/var/www/html/php/pasteur_demo.lock";
+            
                 if (isset($_FILES[$fileInputName]) && is_array($_FILES[$fileInputName]['name'])) {
                     foreach ($_FILES[$fileInputName]['name'] as $key => $name) {
                         if ($_FILES[$fileInputName]['error'][$key] == UPLOAD_ERR_OK) {
+                            // Check for lock file, wait if exists
+                            while (file_exists($lockFile)) {
+                                error_log("Waiting for previous instance to finish...");
+                                sleep(10);  // Wait for 1 second before checking again
+                            }
+            
+                            // Create the lock file to prevent other instances
+                            file_put_contents($lockFile, '');
+            
+                            // Handle file upload process
                             file_put_contents('output.json', '');
-
-                            // Get the temporary file path of the uploaded file
+            
                             $fileTmpPath = $_FILES[$fileInputName]['tmp_name'][$key];
                             $fileExtension = pathinfo($name, PATHINFO_EXTENSION);
-                            $fileName = uniqid(rand(), true) . '.' . $fileExtension; // Generate a random filename
-                            // Define the destination path in the input directory
-                            $destinationPath = "./input/" . $fileName;
-
-                            // Move the uploaded file to the input directory
-                            if (!move_uploaded_file($fileTmpPath, $destinationPath)) {
-                                throw new Exception('Error moving uploaded file.');
-                            }
-
-                            // Construct the command to execute the Python script with the image path
+                            $fileName = uniqid(rand(), true) . '.' . $fileExtension;
+                            $destinationPath = "/imagem/input/" . $fileName;
+            
+                            error_log("destinationPath: ".$destinationPath);
+                            move_uploaded_file($fileTmpPath, $destinationPath);
+            
                             $command = escapeshellcmd("/var/www/html/venv/bin/python /var/www/html/php/pasteur_demo.py") . ' ' . escapeshellarg($destinationPath);
-
-                            // Execute the command and capture the output
+            
                             $output = [];
                             $returnVar = 0;
                             exec($command, $output, $returnVar);
-
+            
                             $output = file_get_contents('output.json');
-
                             if ($output === false) {
                                 error_log("Failed to read output.json");
                             } else {
-                                // Decode the JSON into an associative array
                                 $jsonOutput = json_decode($output, true);
                                 error_log(json_encode($jsonOutput));
                                 $quantidade_pessoas = intval($jsonOutput['quantidade_pessoas']);
                                 $caminho_arquivo_anonimizado = $jsonOutput['caminho_arquivo_anonimizado'];
                                 $encryptKey = "tjd3s_secret_key";
                                 $iv = "tjd3s_initialization_vector";
-                                $caminho_arquivo_original = handleDecrypt(
-                                    $jsonOutput['caminho_arquivo_original'],
-                                    $encryptKey,
-                                    $iv
-                                );
+                                $caminho_arquivo_original = handleDecrypt($jsonOutput['caminho_arquivo_original'], $encryptKey, $iv);
                                 $nome_arquivo = $jsonOutput['nome_arquivo'];
-                                // Check if decoding was successful
+            
                                 if (json_last_error() !== JSON_ERROR_NONE) {
                                     error_log("JSON Decode Error: " . json_last_error_msg());
                                 } else {
-                                    // Convert the associative array back into a JSON string
                                     $jsonString = json_encode($jsonOutput);
-
-                                    // Log the JSON string
                                     error_log("Processed JSON Output: " . $jsonString);
                                 }
-                                // file_put_contents('output.json', '');
                             }
-
-
-
+            
                             error_log("Command executed: $command");
-                            // error_log("Output: " . implode("\n", $output));
                             error_log("Return code: $returnVar");
-
+            
                             if ($returnVar !== 0) {
                                 error_log("Error: Python script execution failed.");
-                                // error_log("Output: " . implode("\n", $output));
                             } else {
                                 error_log("Python script executed successfully.");
                             }
+            
+                            // Remove the lock file
+                            unlink($lockFile);
                         } else {
                             throw new Exception('Error uploading file "' . htmlspecialchars($name) . '": ' . getUploadErrorMessage($_FILES[$fileInputName]['error'][$key]));
                         }
                     }
                 }
             }
+            
 
 
 
@@ -323,7 +314,7 @@ try {
             }
             handleFileUploads('files');
         } catch (Exception $e) {
-            echo 'Caught exception: ',  $e->getMessage(), "\n";
+            error_log('Caught exception: '.  $e->getMessage(), "\n");
         }
     }
 

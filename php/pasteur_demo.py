@@ -21,9 +21,9 @@ parser.add_argument("input_file", help="Path to the input image file or director
 args = parser.parse_args()
 
 # Ensure the input file is in the ../input directory
-source_dir = "./input"
-dest_dir = "./cript"           # Relative path for encrypted images
-key_dir = "./key"              # Relative path for encryption keys
+source_dir = "/imagem/input"
+dest_dir = "/imagem/cript"
+key_dir = "/imagem/key"
 
 
 
@@ -36,13 +36,15 @@ def ensure_directory_exists(directory_path):
         print(f"Pasta '{directory_path}' já existe.")
 
 # Ensure all necessary directories exist
-directories = ['cript', 'pasteur1', 'pasteur2', 'key', 'decrypted', 'lixeira']
+directories = ['/imagem/cript', '/imagem/pasteur1', '/imagem/pasteur2', '/imagem/key', '/imagem/decrypted', '/imagem/lixeira']
 for folder in directories:
-    ensure_directory_exists(f"./{folder}")
+    ensure_directory_exists(f"/{folder}")
 
 # Diretórios de origem e destino da lixeira
-origem = './input'
-destino = './lixeira'
+origem = '/imagem/input'
+#origem1 = '/imagem/input'
+#origem2 = '/imagem/pasteur'
+destino = '/imagem/lixeira'
 
 # Obter a data e hora atual em UTC
 agora_utc = datetime.now(timezone.utc)
@@ -67,7 +69,7 @@ print("Arquivos de imagem renomeados com sucesso!")
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_alt.xml')
 
 # Criar um diretório para salvar as imagens com rostos detectados, se não existir
-diretorio_saida = './pasteur2'
+diretorio_saida = '/imagem/pasteur2'
 if not os.path.exists(diretorio_saida):
     os.makedirs(diretorio_saida)
 
@@ -75,6 +77,7 @@ if not os.path.exists(diretorio_saida):
 def remove_faces_from_image(image_path, output_dir):
     global a
     global output_path
+
     image = cv2.imread(image_path)
     if image is None:
         print(f"Erro ao carregar a imagem: {image_path}")
@@ -138,8 +141,8 @@ def process_images(input_dir, output_dir):
             image_path = os.path.join(input_dir, filename)
             remove_faces_from_image(image_path, output_dir)
 
-input_dir = "./input"
-output_dir = "./pasteur1"
+input_dir = "/imagem/input"
+output_dir = "/imagem/pasteur1"
 process_images(input_dir, output_dir)
 
 # Criptografia de imagem e geração de key
