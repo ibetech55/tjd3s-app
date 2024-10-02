@@ -634,14 +634,20 @@ document.getElementById('criar-evidencia-form').addEventListener('submit', funct
             method: 'POST',
             body: formData
         })
-            .then(() => {
-                formElement.reset();
-                suggestionSelected = "";
-                document.getElementById('imagePreviews').innerHTML = '';
-                document.getElementById("remove-chip").click();
-                loading.style.display = "none"
-                alert('Dados enviados com sucesso!');
-                hideLoading();
+            .then((response) => {
+                if (!response.ok) {
+                    console.error('Error submitting data');
+                    alert('Erro ao enviar dados, tente novamente');
+                    hideLoading();
+                } else {
+                    formElement.reset();
+                    suggestionSelected = "";
+                    document.getElementById('imagePreviews').innerHTML = '';
+                    document.getElementById("remove-chip").click();
+                    loading.style.display = "none"
+                    alert('Dados enviados com sucesso!');
+                    hideLoading();
+                }
             })
             .catch(error => {
                 console.error('Error submitting data:', error);

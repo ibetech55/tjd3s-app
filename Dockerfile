@@ -25,11 +25,6 @@ COPY ./php/requirements.txt /tmp/requirements.txt
 # Install required Python packages from requirements.txt
 RUN /var/www/html/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt
 
-# Create the uploads directory and set permissions
-# RUN mkdir -p /var/www/html/uploads && \
-#     chown -R www-data:www-data /var/www/html/uploads && \
-#     chmod -R 777 /var/www/html/uploads
-
 # Copy the current directory contents into the container at /var/www/html
 COPY . /var/www/html/
 
